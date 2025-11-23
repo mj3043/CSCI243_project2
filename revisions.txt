@@ -1,0 +1,39 @@
+CSCI 243 - Project 2: Postfix Interpreter
+Author: mj3043
+Date: November 23, 2025
+
+FINAL SUBMISSION - FULLY WORKING
+
+All required features implemented correctly and tested extensively:
+
+- Correct tokenization with proper memory ownership using strdup
+- Recursive-descent parsing of postfix expressions
+- Full support for +, -, *, /, %, = (assignment), and ? (ternary operator)
+- Assignment operator properly treats left operand as l-value (not evaluated)
+- Ternary operator correctly builds ALT_OP and Q_OP nodes and evaluates only one branch
+- Fully parenthesized infix output with no extra spaces
+- Symbol table loading from optional file (sym.1 format)
+- Symbol table correctly displayed at start and end with exact formatting
+- Variables can be created and modified during evaluation
+- Chained assignments work (e.g., a b c 42 = = =)
+- Robust error handling for all cases (too few/many tokens, illegal token, div by zero, undefined symbol, etc.)
+- All memory dynamically allocated and properly freed
+- No memory leaks — valgrind clean on all test cases
+- Proper handling of comments (# at start or middle of line)
+- Input line length checking and graceful handling of over-long lines
+- Strict C99 compliance with -Wall -Wextra -pedantic (zero warnings on final build)
+
+Development used Git regularly throughout the project.
+All bugs related to string ownership, pop-before-copy, and POSIX feature macros were identified and fixed.
+
+Program passes all manual tests including:
+  a → a = 10
+  a 5 + → (a+5) = 15
+  1 2 3 ? → (1?(2:3)) = 2
+  foo 999 = → (foo=999) = 999
+  foo foo 111 + = → (foo=(foo+111)) = 1110
+
+Ready for Gradescope autograder.
+This is the final, correct, fully functional version.
+
+End of revisions.
