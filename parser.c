@@ -183,7 +183,11 @@ tree_node_t *make_parse_tree(char *expr)
     }
     free(copy);
 
-    if (!any) { free_stack(stk); set_parse_error(TOO_FEW_TOKENS, "Invalid expression, not enough tokens"); return NULL; }
+    if (!any) {
+        free_stack(stk);
+        set_parse_error(TOO_FEW_TOKENS, "Invalid expression, not enough tokens");
+        return NULL;
+    }
 
     tree_node_t *root = parse(stk);
     if (parser_error != PARSE_NONE) { free_stack(stk); return NULL; }

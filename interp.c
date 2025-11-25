@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "interp.h"
 #include "parser.h"
@@ -92,11 +93,12 @@ int main(int argc, char **argv)
         rep(start);
     }
 
-    /* Final symbol table dump on exit (only if non-empty) */
+    // Correct final output: no extra blank line when input is redirected
+    if (isatty(fileno(stdin))) {
+        printf("\n");
+    }
     dump_table();
 
-    /* Clean up symbol table memory */
     free_table();
-
     return EXIT_SUCCESS;
 }
