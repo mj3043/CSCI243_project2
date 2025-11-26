@@ -38,7 +38,8 @@ int main(int argc, char **argv)
     dump_table();
 
     /* Print banner only in interactive mode */
-    if (isatty(fileno(stdin))) {
+    int interactive = isatty(fileno(stdin));
+    if (interactive) {
         printf("Enter postfix expressions (CTRL-D to exit):\n");
     }
 
@@ -46,7 +47,7 @@ int main(int argc, char **argv)
 
     while (1) {
         /* Print prompt only in interactive mode */
-        if (isatty(fileno(stdin))) {
+        if (interactive) {
             printf("> ");
             fflush(stdout);
         }
@@ -102,7 +103,7 @@ int main(int argc, char **argv)
     }
 
     /* Final dump: no extra blank line when input is redirected */
-    if (isatty(fileno(stdin))) {
+    if (interactive) {
         printf("\n");
     }
     dump_table();

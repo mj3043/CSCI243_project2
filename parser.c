@@ -36,7 +36,7 @@ static void set_eval_error(eval_error_t e, const char *m) { evaluator_error = e;
 static int is_op(const char *t)
 {
     return strcmp(t,"+")==0 || strcmp(t,"-")==0 || strcmp(t,"*")==0 ||
-           strcmp(t,"/")==0 || strcmp(t,"%")==0 || strcmp(t,"?")==0 || strcmp(t,"=")==0;
+           strcmp(t,"/")==0 || strcmp(t,"%")==0 || strcmp(t,"?")==0 || strcmp(t,"<-")==0;
 }
 
 static op_type_t to_op(const char *t)
@@ -46,7 +46,7 @@ static op_type_t to_op(const char *t)
     if (strcmp(t,"*") == 0) return MUL_OP;
     if (strcmp(t,"/") == 0) return DIV_OP;
     if (strcmp(t,"%") == 0) return MOD_OP;
-    if (strcmp(t,"=") == 0) return ASSIGN_OP;
+    if (strcmp(t,"<-") == 0) return ASSIGN_OP;
     return Q_OP;  // only "?" left
 }
 
@@ -129,14 +129,21 @@ tree_node_t *make_parse_tree(char *e)
 
     if (empty_stack(s)) { free_stack(s); set_parse_error(TOO_FEW_TOKENS, NULL); return NULL; }
 
-    tree_node_t *root = parse(s);
+        tree_node_t *root = parse(s);
 
-    if (parser_error || !empty_stack(s)) {
+    if (parser_error != PARSE_NONE) {
         if (root) cleanup_tree(root);
         free_stack(s);
-        if (!parser_error) set_parse_error(TOO_MANY_TOKENS, NULL);
         return NULL;
     }
+
+    if (!empty_stack(s)) {
+        if (root) cleanup_tree(root);
+        free_stack(s);
+        set_parse_error(TOO_MANY_TOKENS, NULL);
+        return NULL;
+    }
+
     free_stack(s);
     return root;
 }
@@ -215,6 +222,9 @@ void print_infix(tree_node_t *n)
         interior_node_t *alt = (interior_node_t *)in->right->node;
         printf("("); print_infix(alt->left); printf(":"); print_infix(alt->right); printf(")");
         printf(")");
+    } else if (in->op == ASSIGN_OP) {
+        printf("("); print_infix(in->left);
+        printf("="); print_infix(in->right); printf(")");
     } else {
         printf("("); print_infix(in->left);
         printf("%s", n->token); print_infix(in->right); printf(")");
