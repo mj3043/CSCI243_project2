@@ -91,12 +91,16 @@ int empty_stack(stack_t *stack)
 }
 
 /// Free entire stack and all owned data
-/// @param s stack to free (also frees the stack_t itself)
-void free_stack(stack_t *s)
+/// @param stack stack to free (also frees the stack_t itself)
+void free_stack(stack_t *stack)
 {
-    if (!s) return;
-    while (s->top) {
-        pop(s);           // pop already frees the string and the node
+    if (!stack) return;
+
+    while (stack->top) {
+        stack_node_t *node = stack->top;
+        stack->top = node->next;
+        if (node->data) free(node->data);
+        free(node);
     }
-    free(s);
+    free(stack);
 }

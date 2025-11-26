@@ -1,19 +1,23 @@
 // interp.c
-// No prompts, no symbol table dump at all when input is redirected
-// Author: Munkh-Orgil Jargalsaikhan
+// Main program: command-line handling and REPL for postfix interpreter
+// Handles symbol table loading, input processing, comments, and final dump
+// @author: Munkh-Orgil Jargalsaikhan
 
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L   // for clean compilation on queeg
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
 
 #include "interp.h"
 #include "parser.h"
 #include "symtab.h"
 
+/// Program entry point
+/// @param argc number of command-line arguments (1 or 2 expected)
+/// @param argv program name and optional symbol table filename
+/// @return EXIT_SUCCESS on clean exit, EXIT_FAILURE on usage error
 int main(int argc, char **argv)
 {
     /* Validate command-line arguments */
@@ -22,51 +26,50 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    /* Load symbol table (file or empty) */
+    /* Load symbol table: either from file or create empty one */
     if (argc == 2) {
-        build_table(argv[1]);
+        build_table(argv[1]);           // exits on error (per spec)
     } else {
-        build_table(NULL);
+        build_table(NULL);              // empty table
     }
 
-    /* NO dump_table() here — autograder hates any extra output */
+    /* Print initial symbol table (only if non-empty) */
+    dump_table();
 
-    char linebuf[MAX_LINE + 2];
+    printf("Enter postfix expressions (CTRL-D to exit):\n");
 
-    while (1) {
-        if (!fgets(linebuf, sizeof(linebuf), stdin)) {
-            break;  /* EOF */
-        }
+    char linebuf[MAX_LINE + 2];         // +2 for '\n' and '\0'
 
+    /* FIXED: Proper REPL loop — prompt only printed when fgets() will read */
+    while (printf("> "), fflush(stdout), fgets(linebuf, sizeof(linebuf), stdin)) {
+
+        /* Detect and reject overly long lines */
         size_t len = strlen(linebuf);
-
-        /* Detect and skip overly long lines */
-        if (len == sizeof(linebuf) - 1 && linebuf[len - 1] != '\n') {
+        if (len == sizeof(linebuf) - 1 && linebuf[len-1] != '\n') {
             fprintf(stderr, "Input line too long\n");
             int c;
-            while ((c = getchar()) != EOF && c != '\n') ;
+            while ((c = getchar()) != EOF && c != '\n') ;  // discard rest
             continue;
         }
 
-        /* Remove trailing newline and possible CR */
-        if (len > 0 && linebuf[len - 1] == '\n') linebuf[len - 1] = '\0';
-        char *cr = strchr(linebuf, '\r');
-        if (cr) *cr = '\0';
+        /* Remove trailing newline */
+        if (len > 0 && linebuf[len-1] == '\n') {
+            linebuf[len-1] = '\0';
+        }
 
-        /* Skip full-line comments */
+        /* Skip full-line comments starting with # */
         char *p = linebuf;
         while (*p == ' ' || *p == '\t') p++;
         if (*p == '#') continue;
 
-        /* Remove inline comments */
+        /* Remove inline comments (everything after #) */
         char *hash = strchr(linebuf, '#');
         if (hash) *hash = '\0';
 
-        /* Trim leading whitespace */
+        /* Trim leading and trailing whitespace */
         char *start = linebuf;
         while (*start && isspace((unsigned char)*start)) start++;
 
-        /* Trim trailing whitespace */
         char *end = start + strlen(start);
         if (end != start) {
             end--;
@@ -76,14 +79,18 @@ int main(int argc, char **argv)
             }
         }
 
-        /* Skip empty lines */
+        /* Skip blank lines after trimming */
         if (*start == '\0') continue;
 
-        /* Evaluate the expression */
+        /* Process the expression */
         rep(start);
     }
 
-    /* NO final dump_table() — autograder expects only the expression outputs */
+    /* FIXED: Clean separation — final symbol table starts on its own line */
+    printf("\n");
+    dump_table();
+
+    /* Clean up symbol table memory */
     free_table();
 
     return EXIT_SUCCESS;
