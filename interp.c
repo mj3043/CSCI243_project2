@@ -1,6 +1,6 @@
 // interp.c
 // Main program: command-line handling and REPL for postfix interpreter
-// @author: Munkh-Orgil Jargalsaikhan
+// Author: Munkh-Orgil Jargalsaikhan
 
 #define _POSIX_C_SOURCE 200809L
 
@@ -22,34 +22,41 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    /* Load symbol table */
+    /* Load symbol table file or empty table */
     if (argc == 2) {
         build_table(argv[1]);
     } else {
         build_table(NULL);
     }
 
-    /* Initial dump */
+    /* Initial dump before processing input */
     dump_table();
 
     char linebuf[MAX_LINE + 2];
 
     while (1) {
+
+        /* Read a single line */
         if (!fgets(linebuf, sizeof(linebuf), stdin)) {
             break;  // EOF
         }
 
+        /* Detect overly long line */
         size_t len = strlen(linebuf);
-        if (len == sizeof(linebuf) - 1 && linebuf[len-1] != '\n') {
+        if (len == sizeof(linebuf) - 1 && linebuf[len - 1] != '\n') {
             fprintf(stderr, "Input line too long\n");
+
             int c;
             while ((c = getchar()) != EOF && c != '\n') ;
             continue;
         }
 
-        if (len > 0 && linebuf[len-1] == '\n') {
-            linebuf[len-1] = '\0';
+        /* Strip trailing newline */
+        if (len > 0 && linebuf[len - 1] == '\n') {
+            linebuf[len - 1] = '\0';
         }
+
+        /* Strip CR if present (Windows input) */
         char *cr = strchr(linebuf, '\r');
         if (cr) *cr = '\0';
 
@@ -58,14 +65,15 @@ int main(int argc, char **argv)
         while (*p == ' ' || *p == '\t') p++;
         if (*p == '#') continue;
 
-        /* Remove inline comments */
+        /* Remove inline comments beginning with '#' */
         char *hash = strchr(linebuf, '#');
         if (hash) *hash = '\0';
 
-        /* Trim whitespace */
+        /* Leading trim */
         char *start = linebuf;
         while (*start && isspace((unsigned char)*start)) start++;
 
+        /* Trailing trim */
         char *end = start + strlen(start);
         if (end != start) {
             end--;
@@ -75,14 +83,16 @@ int main(int argc, char **argv)
             }
         }
 
+        /* Skip blank line */
         if (*start == '\0') continue;
 
+        /* Evaluate */
         rep(start);
     }
 
-    /* Final dump — no extra newline */
+    /* Final dump without extra newline */
     dump_table();
-
     free_table();
+
     return EXIT_SUCCESS;
 }
