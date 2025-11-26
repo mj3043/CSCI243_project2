@@ -37,13 +37,19 @@ int main(int argc, char **argv)
     /* Print initial symbol table (only if non-empty) */
     dump_table();
 
-    printf("Enter postfix expressions (CTRL-D to exit):\n");
+    /* Print banner only in interactive mode */
+    if (isatty(fileno(stdin))) {
+        printf("Enter postfix expressions (CTRL-D to exit):\n");
+    }
 
     char linebuf[MAX_LINE + 2];         // +2 for '\n' and '\0'
 
     while (1) {
-        printf("> ");
-        fflush(stdout);
+        /* Print prompt only in interactive mode */
+        if (isatty(fileno(stdin))) {
+            printf("> ");
+            fflush(stdout);
+        }
 
         /* Read one line; handle EOF gracefully */
         if (!fgets(linebuf, sizeof(linebuf), stdin)) {
@@ -63,6 +69,8 @@ int main(int argc, char **argv)
         if (len > 0 && linebuf[len-1] == '\n') {
             linebuf[len-1] = '\0';
         }
+        char *cr = strchr(linebuf, '\r');
+        if (cr) *cr = '\0';
 
         /* Skip full-line comments starting with # */
         char *p = linebuf;
@@ -93,7 +101,7 @@ int main(int argc, char **argv)
         rep(start);
     }
 
-    // Correct final output: no extra blank line when input is redirected
+    /* Final dump: no extra blank line when input is redirected */
     if (isatty(fileno(stdin))) {
         printf("\n");
     }
